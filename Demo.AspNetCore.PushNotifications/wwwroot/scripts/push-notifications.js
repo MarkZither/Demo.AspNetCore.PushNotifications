@@ -18,18 +18,18 @@
         }
 
         return outputArray;
-    };
+    }
 
     function initializeConsole() {
         consoleOutput = document.getElementById('output');
         document.getElementById('clear').addEventListener('click', clearConsole);
-    };
+    }
 
     function clearConsole() {
         while (consoleOutput.childNodes.length > 0) {
             consoleOutput.removeChild(consoleOutput.lastChild);
         }
-    };
+    }
 
     function writeToConsole(text) {
         var paragraph = document.createElement('p');
@@ -37,7 +37,7 @@
         paragraph.appendChild(document.createTextNode(text));
 
         consoleOutput.appendChild(paragraph);
-    };
+    }
 
     function registerPushServiceWorker() {
         navigator.serviceWorker.register('/scripts/service-workers/push-service-worker.js', { scope: '/scripts/service-workers/push-service-worker/' })
@@ -50,7 +50,7 @@
             }).catch(function (error) {
                 writeToConsole('Push Service Worker registration has failed: ' + error);
             });
-    };
+    }
 
     function initializeUIState() {
         subscribeButton = document.getElementById('subscribe');
@@ -66,7 +66,7 @@
             .then(function (subscription) {
                 changeUIState(Notification.permission === 'denied', subscription !== null);
             });
-    };
+    }
 
     function changeUIState(notificationsBlocked, isSubscibed) {
         subscribeButton.disabled = notificationsBlocked || isSubscibed;
@@ -75,7 +75,7 @@
         if (notificationsBlocked) {
             writeToConsole('Permission for Push Notifications has been denied');
         }
-    };
+    }
 
     function subscribeForPushNotifications() {
         if (applicationServerPublicKey) {
@@ -97,7 +97,7 @@
                     writeToConsole('Failed to retrieve Public Key: ' + error);
                 });
         }
-    };
+    }
 
     function subscribeForPushNotificationsInternal() {
         pushServiceWorkerRegistration.pushManager.subscribe({
@@ -128,7 +128,7 @@
                     writeToConsole('Failed to subscribe for Push Notifications: ' + error);
                 }
             });
-    };
+    }
 
     function unsubscribeFromPushNotifications() {
         pushServiceWorkerRegistration.pushManager.getSubscription()
@@ -155,7 +155,7 @@
                         });
                 }
             });
-    };
+    }
 
     function sendPushNotification() {
         let payload = notificationInput.value;
@@ -174,18 +174,24 @@
             }).catch(function (error) {
                 writeToConsole('Failed to send Push Notification: ' + error);
             });
-    };
+    }
 
     return {
         initialize: function () {
             initializeConsole();
 
-            if (!'serviceWork' in navigator) {
+            if ('serviceWorker' in navigator) {
+                writeToConsole('Service Workers are supported');
+            }
+            else {
                 writeToConsole('Service Workers are not supported');
                 return;
             }
 
-            if (!'PushManager' in window) {
+            if ('PushManager' in window) {
+                writeToConsole('Push API supported');
+            }
+            else {
                 writeToConsole('Push API not supported');
                 return;
             }

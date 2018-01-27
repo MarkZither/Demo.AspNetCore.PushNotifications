@@ -5,6 +5,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Demo.AspNetCore.PushNotifications.Services;
 using Demo.AspNetCore.PushNotifications.Formatters;
+using Demo.AspNetCore.PushNotifications.Models;
+using Microsoft.AspNetCore.Identity;
+using Demo.AspNetCore.PushNotifications.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Demo.AspNetCore.PushNotifications
 {
@@ -19,6 +23,17 @@ namespace Demo.AspNetCore.PushNotifications
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddDbContext<ApplicationDbContext>(options =>
+            //options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            options.UseSqlite("Data Source=DemoAuth.db"));
+
+            services.AddIdentity<ApplicationUser, IdentityRole>()
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddDefaultTokenProviders();
+
+            // Add application services.
+            services.AddTransient<IEmailSender, EmailSender>();
+
             services.AddPushSubscriptionStore(Configuration)
                 .AddPushNotificationService(Configuration)
                 .AddMvc(options =>
@@ -27,25 +42,35 @@ namespace Demo.AspNetCore.PushNotifications
                 });
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ApplicationDbContext context)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
 
+            context.Database.Migrate();
+
             DefaultFilesOptions defaultFilesOptions = new DefaultFilesOptions();
-            defaultFilesOptions.DefaultFileNames.Clear();
+            //defaultFilesOptions.DefaultFileNames.Clear();
             defaultFilesOptions.DefaultFileNames.Add("push-notifications.html");
 
-            app.UseDefaultFiles(defaultFilesOptions)
+            app.UseAuthentication();
+
+            app//.UseDefaultFiles(defaultFilesOptions)
                 .UseStaticFiles()
                 .UsePushSubscriptionStore()
-                .UseMvc()
-                .Run(async (context) =>
+                .UseMvc(routes =>
                 {
-                    await context.Response.WriteAsync("-- Demo.AspNetCore.PushNotifications --");
-                });
+                    routes.MapRoute(
+                        name: "default",
+                        template: "{controller=Home}/{action=Index}/{id?}");
+                })
+            //.Run(async (context2) =>
+            //{
+            //  await context2.Response.WriteAsync("-- Demo.AspNetCore.PushNotifications --");
+            //})
+            ;
         }
     }
 }
