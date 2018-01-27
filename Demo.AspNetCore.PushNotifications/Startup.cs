@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json.Converters;
 using Demo.AspNetCore.PushNotifications.Services;
 using Demo.AspNetCore.PushNotifications.Formatters;
 using Demo.AspNetCore.PushNotifications.Models;
@@ -39,6 +40,10 @@ namespace Demo.AspNetCore.PushNotifications
                 .AddMvc(options =>
                 {
                     options.InputFormatters.Add(new TextPlainInputFormatter());
+                })
+                .AddJsonOptions(options =>
+                {
+                    options.SerializerSettings.Converters.Add(new StringEnumConverter());
                 });
         }
 
